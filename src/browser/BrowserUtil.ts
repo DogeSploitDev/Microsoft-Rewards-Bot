@@ -21,7 +21,7 @@ export default class BrowserUtil {
         { selector: '#idSIButton9', label: 'PrimaryLoginButton' },
         { selector: '.ms-Button.ms-Button--primary', label: 'Primary Generic' },
         { selector: '.c-glyph.glyph-cancel', label: 'Mobile Welcome Cancel' },
-        { selector: '.maybe-later, button[data-automation-id*="maybeLater" i]', label: 'Maybe Later' },
+        { selector: '.maybe-later, button[data-automation-id*="maybeLater" i], a.dashboardPopUpPopUpCloseButton', label: 'Maybe Later' },
         { selector: '#bnp_btn_reject', label: 'Bing Cookie Reject' },
         { selector: '#bnp_btn_accept', label: 'Bing Cookie Accept' },
         { selector: '#bnp_close_link', label: 'Bing Cookie Close' },

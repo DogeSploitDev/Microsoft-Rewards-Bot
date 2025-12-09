@@ -98,6 +98,9 @@ export class HumanTyping {
      * 
      * PATTERN: Humans type emails in 3 parts: [name] @ [domain]
      * 
+     * CRITICAL FIX: Previous version called type() for domain which cleared the field,
+     * erasing the localPart. Now we use typeAppend() to preserve existing content.
+     * 
      * @param locator Playwright locator (email input)
      * @param email Email address
      * @returns Promise<void>
@@ -111,20 +114,78 @@ export class HumanTyping {
             return
         }
 
-        // IMPROVEMENT: Type local part (fast)
+        // IMPROVEMENT: Type local part (fast) - this clears and types
         await this.type(locator, localPart, 1.3)
 
         // IMPROVEMENT: Slight pause before @ (humans verify username)
         await this.delay(50, 200)
 
         // Type @ symbol (slightly slower - special key)
+        // CRITICAL: Use pressSequentially, NOT type() which would clear the field
         await locator.pressSequentially('@', { delay: 100 }).catch(() => { })
 
         // IMPROVEMENT: Slight pause after @ (humans verify domain)
         await this.delay(50, 150)
 
-        // Type domain (fast)
-        await this.type(locator, domain, 1.4)
+        // CRITICAL FIX: Use typeAppend() to NOT clear the field (preserve localPart + @)
+        await this.typeAppend(locator, domain, 1.4)
+
+        // VERIFICATION: Check that input contains the full email
+        await this.delay(100, 200)
+        const actualValue = await locator.inputValue().catch(() => '')
+        if (!actualValue.includes(localPart) || !actualValue.includes('@') || !actualValue.includes(domain)) {
+            console.warn(`[HumanTyping.typeEmail] WARNING: Email may not have been typed correctly. Expected: ${email}, Got: ${actualValue}`)
+        }
+    }
+
+    /**
+     * Type text without clearing the field first (append to existing content)
+     * 
+     * CRITICAL: Use this when you want to ADD to existing text, not replace it
+     * 
+     * @param locator Playwright locator (input field)
+     * @param text Text to append
+     * @param speed Typing speed multiplier (1.0 = normal, 0.5 = slow, 2.0 = fast)
+     * @returns Promise<void>
+     */
+    private static async typeAppend(locator: Locator, text: string, speed: number = 1.0): Promise<void> {
+        // Type each character with variable timing (no clearing)
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i]
+            if (!char) continue // Skip undefined characters
+
+            // Natural typing speed variance
+            const baseDelay = 40 + Math.random() * 40 // 40-80ms
+            const charDelay = Math.floor(baseDelay / speed)
+
+            // Slower on special characters
+            const isSpecialChar = /[^a-zA-Z0-9@.]/.test(char)
+            const finalDelay = isSpecialChar ? charDelay * 1.5 : charDelay
+
+            await locator.pressSequentially(char, { delay: finalDelay }).catch(() => {
+                // Typing failed - continue (character may have been typed)
+            })
+
+            // Occasional micro-pauses (10% chance)
+            if (Math.random() < 0.1 && i > 0) {
+                await this.delay(100, 300)
+            }
+
+            // Burst typing pattern (30% chance)
+            if (Math.random() < 0.3 && i < text.length - 2) {
+                const burstLength = Math.floor(Math.random() * 2) + 2 // 2-3 chars
+                for (let j = 0; j < burstLength && i + 1 < text.length; j++) {
+                    i++
+                    const nextChar = text[i]
+                    if (nextChar) {
+                        await locator.pressSequentially(nextChar, { delay: 10 }).catch(() => { })
+                    }
+                }
+            }
+        }
+
+        // Short pause after typing
+        await this.delay(100, 300)
     }
 
     /**

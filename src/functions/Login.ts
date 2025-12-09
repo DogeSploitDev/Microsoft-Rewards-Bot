@@ -322,7 +322,8 @@ export class Login {
             if (checkCount % 3 === 0) {
                 await Promise.allSettled([
                     this.passkeyHandler.handlePasskeyPrompts(page, 'oauth'),
-                    this.totpHandler.tryAutoTotp(page, 'mobile-oauth')
+                    this.totpHandler.tryAutoTotp(page, 'mobile-oauth'),
+                    this.bot.browser.utils.tryDismissAllMessages(page)
                 ])
             }
 
@@ -837,7 +838,8 @@ export class Login {
             if (checkCount % 3 === 0) {
                 await Promise.allSettled([
                     this.passkeyHandler.handlePasskeyPrompts(page, 'main'),
-                    this.totpHandler.tryAutoTotp(page, 'post-password wait')
+                    this.totpHandler.tryAutoTotp(page, 'post-password wait'),
+                    this.bot.browser.utils.tryDismissAllMessages(page)
                 ])
             } else {
                 await this.passkeyHandler.handlePasskeyPrompts(page, 'main')

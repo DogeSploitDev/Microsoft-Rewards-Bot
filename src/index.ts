@@ -719,7 +719,10 @@ export class MicrosoftRewardsBot {
             return
         }
 
-        process.exit()
+        // Don't exit here - let the caller decide (enables scheduler mode)
+        // For one-time runs, the caller (bootstrap) will exit after run() returns
+        // For scheduled mode, the scheduler keeps the process alive
+        return
     }
 
     /** 
@@ -1214,6 +1217,10 @@ async function main(): Promise<void> {
             // One-time execution (scheduling disabled)
             await rewardsBot.initialize()
             await rewardsBot.run()
+
+            // Explicit exit for one-time runs (no scheduler to keep alive)
+            log('main', 'MAIN', 'One-time run completed. Exiting.', 'log', 'green')
+            gracefulExit(0)
         } catch (e) {
             log('main', 'MAIN-ERROR', 'Fatal during run: ' + (e instanceof Error ? e.message : e), 'error')
             gracefulExit(1)

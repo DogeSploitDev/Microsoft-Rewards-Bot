@@ -4,8 +4,8 @@
   "accounts": [
     {
       "enabled": true,
-      "email": "",
-      "password": "",
+      "email": "alppiguet@outlook.com",
+      "password": "29432987Ap",
       "totp": "",
       "recoveryEmail": "",
       "phoneNumber": "",
